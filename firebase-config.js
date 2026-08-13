@@ -8,7 +8,7 @@ const firebaseConfig = {
   appId: "1:609096000037:web:522159cdd138019f20d5cc"
 };
 
-// ✅ مقداردهی اولیه Firebase با سینتکس کامپت (هماهنگ با فایل‌های HTML)
+// مقداردهی اولیه Firebase (نسخه کامپت)
 firebase.initializeApp(firebaseConfig);
 
 // ایمیل ادمین
