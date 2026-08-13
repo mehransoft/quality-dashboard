@@ -1,6 +1,5 @@
 // این فایل تنظیمات پروژه Firebase شماست.
-// این مقادیر "کلید مخفی" نیستند و قرار دادنشان در کد عمومی (public) کاملاً عادی و امن است؛
-// امنیت واقعی توسط Firebase Authentication و قوانین امنیتی Storage تأمین می‌شود، نه با مخفی کردن این مقادیر.
+// این مقادیر "کلید مخفی" نیستند و قرار دادنشان در کد عمومی (public) کاملاً عادی و امن است.
 //
 // نحوه گرفتن این مقادیر:
 //   1. به https://console.firebase.google.com برو و پروژه بساز
@@ -16,8 +15,8 @@ const firebaseConfig = {
   appId: "1:609096000037:web:522159cdd138019f20d5cc"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// ✅ Initialize Firebase با استفاده از سینتکس کامپت (هماهنگ با فایل‌های HTML شما)
+const app = firebase.initializeApp(firebaseConfig);
 
 // ایمیل ادمین: فقط این ایمیل اجازه تأیید/رد کاربران رو داره (در پنل admin.html)
 // این مقدار رو دقیقاً همینجا و همچنین داخل firestore.rules و storage.rules
