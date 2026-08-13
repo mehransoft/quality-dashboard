@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ورود | داشبورد کنترل کیفیت</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1015; --panel:rgba(24,28,35,0.72); --border:#2a313b;
+    --text:#e9ecef; --muted:#8b95a1; --amber:#f2b705; --teal:#2dd4bf; --red:#ef5350;
+    --sans:'Vazirmatn',Tahoma,sans-serif; --mono:'Roboto Mono',Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; font-family:var(--sans); color:var(--text);
+    display:flex; align-items:center; justify-content:center; min-height:100vh;
+    background:#0d1015; overflow:hidden; position:relative;
+  }
+  .bg-glow{position:fixed; border-radius:50%; filter:blur(90px); opacity:.35; z-index:0; animation:float 16s ease-in-out infinite;}
+  .bg-glow.g1{width:480px; height:480px; background:#f2b705; top:-120px; right:-100px; animation-delay:0s;}
+  .bg-glow.g2{width:420px; height:420px; background:#2dd4bf; bottom:-140px; left:-100px; animation-delay:3s;}
+  .bg-glow.g3{width:300px; height:300px; background:#ef5350; bottom:20%; right:15%; animation-delay:6s; opacity:.18;}
+  @keyframes float{0%,100%{transform:translate(0,0);} 50%{transform:translate(-20px,25px);}}
+  .grid-overlay{position:fixed; inset:0; z-index:0; opacity:.4;
+    background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    background-size:42px 42px;}
+
+  .card{
+    position:relative; z-index:1; width:100%; max-width:400px; margin:20px;
+    background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:20px;
+    padding:36px 32px 30px; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .brand{display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:26px;}
+  .brand-icon{
+    width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,#f2b705,#d9930a); box-shadow:0 8px 24px rgba(242,183,5,.35); font-size:26px;
+  }
+  .brand h1{font-size:16.5px; font-weight:800; margin:0; text-align:center;}
+  .brand .sub{font-size:11px; color:var(--muted); font-family:var(--mono); letter-spacing:.5px;}
+
+  .tabs{display:flex; background:rgba(255,255,255,.04); border-radius:10px; padding:4px; margin-bottom:22px;}
+  .tab{flex:1; text-align:center; padding:9px 0; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; color:var(--muted); transition:.2s;}
+  .tab.active{background:var(--amber); color:#12151a;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:6px; font-weight:600;}
+  .field input{
+    width:100%; background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--text);
+    border-radius:9px; padding:11px 14px; font-size:13.5px; font-family:var(--sans); outline:none; transition:.15s;
+  }
+  .field input:focus{border-color:var(--amber); background:rgba(255,255,255,.06);}
+  .field input::placeholder{color:#5b6472;}
+
+  .submit-btn{
+    width:100%; padding:12px 0; border:none; border-radius:9px; background:linear-gradient(135deg,#f2c00a,#e0a204);
+    color:#141517; font-weight:800; font-size:14px; cursor:pointer; margin-top:6px; transition:.15s;
+    box-shadow:0 8px 20px rgba(242,183,5,.25);
+  }
+  .submit-btn:hover{filter:brightness(1.06);}
+  .submit-btn:disabled{opacity:.55; cursor:default;}
+
+  .msg{font-size:12px; border-radius:8px; padding:9px 12px; margin-bottom:14px; line-height:1.8; display:none;}
+  .msg.err{background:rgba(239,83,80,.12); border:1px solid var(--red); color:#ffb3b0; display:block;}
+  .msg.ok{background:rgba(45,212,191,.12); border:1px solid var(--teal); color:#9cf3e9; display:block;}
+
+  .foot-note{text-align:center; font-size:11px; color:var(--muted); margin-top:18px; font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="bg-glow g1"></div>
+<div class="bg-glow g2"></div>
+<div class="bg-glow g3"></div>
+<div class="grid-overlay"></div>
+
+<div class="card">
+  <div class="brand">
+    <div class="brand-icon">📊</div>
+    <h1>داشبورد کنترل کیفیت خط تولید</h1>
+    <div class="sub">QUALITY&nbsp;CONTROL&nbsp;PORTAL</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tabLogin">ورود</div>
+    <div class="tab" id="tabRegister">ثبت‌نام</div>
+  </div>
+
+  <div class="msg" id="msgBox"></div>
+
+  <form id="authForm">
+    <div class="field">
+      <label>ایمیل</label>
+      <input type="email" id="email" placeholder="you@example.com" required autocomplete="email">
+    </div>
+    <div class="field">
+      <label>رمز عبور</label>
+      <input type="password" id="password" placeholder="حداقل ۶ کاراکتر" required autocomplete="current-password" minlength="6">
+    </div>
+    <button type="submit" class="submit-btn" id="submitBtn">ورود</button>
+  </form>
+
+  <div class="foot-note">دسترسی به داده‌های کنترل کیفیت فقط برای کاربران واردشده</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const tabLogin = document.getElementById('tabLogin');
+const tabRegister = document.getElementById('tabRegister');
+const submitBtn = document.getElementById('submitBtn');
+const msgBox = document.getElementById('msgBox');
+const form = document.getElementById('authForm');
+let mode = 'login';
+
+function setMode(m){
+  mode = m;
+  tabLogin.classList.toggle('active', m==='login');
+  tabRegister.classList.toggle('active', m==='register');
+  submitBtn.textContent = m==='login' ? 'ورود' : 'ایجاد حساب و ورود';
+  msgBox.style.display='none'; msgBox.className='msg';
+}
+tabLogin.addEventListener('click', function(){ setMode('login'); });
+tabRegister.addEventListener('click', function(){ setMode('register'); });
+
+function showMsg(text, type){
+  msgBox.textContent = text;
+  msgBox.className = 'msg ' + type;
+}
+
+const ERROR_FA = {
+  'auth/invalid-email': 'فرمت ایمیل درست نیست.',
+  'auth/user-not-found': 'کاربری با این ایمیل پیدا نشد.',
+  'auth/wrong-password': 'رمز عبور اشتباه است.',
+  'auth/email-already-in-use': 'این ایمیل قبلاً ثبت‌نام کرده — از تب «ورود» استفاده کن.',
+  'auth/weak-password': 'رمز عبور باید حداقل ۶ کاراکتر باشد.',
+  'auth/invalid-credential': 'ایمیل یا رمز عبور اشتباه است.',
+  'auth/too-many-requests': 'تلاش‌های ناموفق زیاد بوده؛ کمی صبر کن و دوباره امتحان کن.'
+};
+
+// اگر کاربر قبلاً لاگین کرده باشد، وضعیت را بررسی کن
+firebase.auth().onAuthStateChanged(function(user){
+  if (user) {
+    // بررسی تأیید از فایل approved_users.json
+    fetch('approved_users.json')
+      .then(res => res.json())
+      .then(approvedList => {
+        if (approvedList.includes(user.email)) {
+          window.location.href = 'index.html';
+        } else {
+          // کاربر لاگین است ولی تأیید نشده
+          showMsg('✅ ثبت‌نام موفق! در انتظار تأیید ادمین.', 'ok');
+          // می‌توانیم برای خروج دکمه بگذاریم، اما فعلاً همین کافی است
+        }
+      })
+      .catch(err => {
+        console.error('خطا در دریافت لیست تأیید:', err);
+        showMsg('خطا در بررسی وضعیت تأیید. لطفاً بعداً تلاش کنید.', 'err');
+      });
+  }
+});
+
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  submitBtn.disabled = true;
+  msgBox.style.display='none';
+
+  const action = mode==='login'
+    ? firebase.auth().signInWithEmailAndPassword(email, password)
+    : firebase.auth().createUserWithEmailAndPassword(email, password);
+
+  action.then(function(userCredential){
+    const user = userCredential.user;
+    // بعد از ورود/ثبت‌نام، بررسی تأیید انجام می‌شود
+    fetch('approved_users.json')
+      .then(res => res.json())
+      .then(approvedList => {
+        if (approvedList.includes(user.email)) {
+          window.location.href = 'index.html';
+        } else {
+          showMsg('✅ ثبت‌نام موفق! در انتظار تأیید ادمین.', 'ok');
+          submitBtn.disabled = false;
+        }
+      })
+      .catch(err => {
+        showMsg('خطا در بررسی تأیید: ' + err.message, 'err');
+        submitBtn.disabled = false;
+      });
+  }).catch(function(err){
+    submitBtn.disabled = false;
+    showMsg(ERROR_FA[err.code] || ('خطا: ' + err.message), 'err');
+  });
+});
+</script>
+</body>
+</html>

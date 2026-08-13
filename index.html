@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>داشبورد کنترل کیفیت</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="dashboard-style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">
+    <span class="dot"></span>
+    <div>
+      <h1>داشبورد کنترل کیفیت خط تولید</h1>
+      <div class="sub">QUALITY&nbsp;CONTROL&nbsp;/&nbsp;PRODUCTION&nbsp;MONITOR</div>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:14px;">
+    <span id="userEmail" style="font-family:var(--mono); font-size:11.5px; color:var(--muted);"></span>
+    <button id="logoutBtn" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:6px 14px; font-size:12px; cursor:pointer; font-family:var(--sans);">خروج</button>
+    <div class="gen-time" id="genTime">—</div>
+  </div>
+</div>
+
+<div id="loadingOverlay" style="position:fixed; inset:0; background:#12151a; display:flex; align-items:center; justify-content:center; z-index:200; flex-direction:column; gap:16px;">
+  <div style="width:42px; height:42px; border:3px solid #2a313b; border-top-color:#f2b705; border-radius:50%; animation:spin 0.9s linear infinite;"></div>
+  <div style="color:#8b95a1; font-family:Tahoma,'Segoe UI',Arial,sans-serif; font-size:13px;" id="loadingText">در حال بررسی ورود...</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+
+<div class="wrap">
+
+  <div class="controls">
+    <div class="ctrl-group">
+      <label>از تاریخ</label>
+      <div class="jdate-picker">
+        <select id="fromDay"></select>
+        <select id="fromMonth"></select>
+        <select id="fromYear"></select>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <label>تا تاریخ</label>
+      <div class="jdate-picker">
+        <select id="toDay"></select>
+        <select id="toMonth"></select>
+        <select id="toYear"></select>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <label>بازه سریع</label>
+      <div class="presets" id="presets">
+        <span class="chip active" data-preset="7">۷ روز اخیر</span>
+        <span class="chip" data-preset="30">۳۰ روز اخیر</span>
+        <span class="chip" data-preset="90">۹۰ روز اخیر</span>
+        <span class="chip" data-preset="all">کل بازه</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-summary" id="flowSummary"></div>
+
+  <div class="section-title"><span class="eyebrow">01</span><h2>روند شاخص‌های کیفیت</h2></div>
+  <div class="panel">
+    <div class="toggle-row" id="granChips">
+      <span class="chip active" data-gran="daily">روزانه</span>
+      <span class="chip" data-gran="weekly">هفتگی</span>
+      <span class="chip" data-gran="monthly">ماهانه</span>
+      <span class="chip" data-gran="quarterly">فصلی (سه‌ماهه)</span>
+      <span class="chip" data-gran="half">شش‌ماهه</span>
+      <span class="chip" data-gran="yearly">سالانه</span>
+    </div>
+    <div class="grid-3">
+      <div>
+        <div class="chart-head"><span class="ch-label">تعداد تولید</span><span class="ch-value" id="valProdCount">—</span></div>
+        <div class="chart-wrap"><canvas id="trendProdCount"></canvas></div>
+      </div>
+      <div>
+        <div class="chart-head"><span class="ch-label">وزن تولید</span><span class="ch-value" id="valProdWeight">—</span></div>
+        <div class="chart-wrap"><canvas id="trendProdWeight"></canvas></div>
+      </div>
+      <div>
+        <div class="chart-head"><span class="ch-label">تعداد رامتو</span><span class="ch-value" id="valRamtoCount">—</span></div>
+        <div class="chart-wrap"><canvas id="trendRamtoCount"></canvas></div>
+      </div>
+      <div>
+        <div class="chart-head"><span class="ch-label">درصد رامتو</span><span class="ch-value" id="valRamtoPct">—</span></div>
+        <div class="chart-wrap"><canvas id="trendRamtoPct"></canvas></div>
+      </div>
+      <div>
+        <div class="chart-head"><span class="ch-label">وزن ضایعات</span><span class="ch-value" id="valWasteWeight">—</span></div>
+        <div class="chart-wrap"><canvas id="trendWasteWeight"></canvas></div>
+      </div>
+      <div>
+        <div class="chart-head"><span class="ch-label">درصد ضایعات</span><span class="ch-value" id="valWastePct">—</span></div>
+        <div class="chart-wrap"><canvas id="trendWastePct"></canvas></div>
+      </div>
+    </div>
+    <div class="insight" id="trendInsight"></div>
+  </div>
+
+  <div class="section-title"><span class="eyebrow">02</span><h2>نمودار کنترل کیفیت (Control Chart)</h2></div>
+  <div class="grid-2b">
+    <div class="panel">
+      <div class="chart-title">نمودار کنترل درصد رامتو — حد بالا ۴٪ / حد نرمال ۲٪ / حد پایین ۰٪</div>
+      <div class="chart-wrap" style="height:280px;"><canvas id="controlRamto"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="chart-title">نمودار کنترل درصد ضایعات — حد بالا ۲٪ / حد نرمال ۱٪ / حد پایین ۰٪</div>
+      <div class="chart-wrap" style="height:280px;"><canvas id="controlWaste"></canvas></div>
+    </div>
+  </div>
+  <div class="insight" id="controlChartInsight"></div>
+
+  <div class="section-title"><span class="eyebrow">03</span><h2>تحلیل علل رامتو (درجه ۲)</h2></div>
+  <div class="grid-2b">
+    <div class="panel">
+      <div class="chart-title">سهم هر علت از تعداد رامتو</div>
+      <div class="table-scroll" style="max-height:320px;">
+        <table class="cause-table" id="ramtoCauseTable"></table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="chart-title">نمودار پارتو علل رامتو</div>
+      <div class="chart-wrap"><canvas id="paretoRamto"></canvas></div>
+    </div>
+  </div>
+  <div class="insight" id="ramtoCauseInsight"></div>
+
+  <div class="section-title"><span class="eyebrow">04</span><h2>تحلیل علل ضایعات</h2></div>
+  <div class="grid-2b">
+    <div class="panel">
+      <div class="chart-title">سهم هر علت از وزن ضایعات</div>
+      <div class="table-scroll" style="max-height:320px;">
+        <table class="cause-table" id="wasteCauseTable"></table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="chart-title">نمودار پارتو علل ضایعات (بر اساس وزن)</div>
+      <div class="chart-wrap"><canvas id="paretoNC"></canvas></div>
+    </div>
+  </div>
+  <div class="insight" id="wasteCauseInsight"></div>
+
+  <div class="section-title"><span class="eyebrow">05</span><h2>توزیع بر اساس محصول</h2></div>
+  <div class="grid-2b">
+    <div class="panel">
+      <div class="chart-title">وزن ضایعات به تفکیک محصول (۱۰ محصول برتر)</div>
+      <div class="chart-wrap"><canvas id="byProductWaste"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="chart-title">تعداد رامتو به تفکیک محصول (۱۰ محصول برتر)</div>
+      <div class="chart-wrap"><canvas id="byProductRamto"></canvas></div>
+    </div>
+  </div>
+  <div class="insight" id="productInsight"></div>
+
+  <div class="section-title"><span class="eyebrow">06</span><h2>جدول کامل جزئیات</h2></div>
+  <div class="panel">
+    <div class="table-controls">
+      <input type="search" id="tableSearch" placeholder="جستجو در نام قطعه، علت، توضیحات...">
+      <select id="tableType">
+        <option value="all">همه رکوردها</option>
+        <option value="nc">اقلام نامنطبق</option>
+        <option value="ramto">رامتو</option>
+      </select>
+    </div>
+    <div class="table-scroll">
+      <table class="datatable">
+        <thead>
+          <tr>
+            <th data-key="date">تاریخ</th><th data-key="type">نوع</th><th data-key="part">نام قطعه/محصول</th>
+            <th data-key="sinkType">نوع سینک</th><th data-key="count">تعداد</th><th data-key="weight">وزن واحد</th>
+            <th data-key="totalWeight">وزن کل (kg)</th><th data-key="cause">علت</th><th data-key="decision">وضعیت/تصمیم</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <button id="prevPage">قبلی</button><span id="pageInfo"></span><button id="nextPage">بعدی</button>
+    </div>
+  </div>
+
+  <footer>Developer: Mehran Pourdada &nbsp;|&nbsp; برنامه‌نویس: مهران پوردادا</footer>
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="dashboard-core.js"></script>
+<script>
+function hideLoading(){ document.getElementById('loadingOverlay').style.display = 'none'; }
+function setLoadingText(t){ document.getElementById('loadingText').textContent = t; }
+
+document.getElementById('logoutBtn').addEventListener('click', function(){
+  firebase.auth().signOut().then(function(){ window.location.href = 'login.html'; });
+});
+
+function showStatusScreen(status){
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.innerHTML = '';
+  const box = document.createElement('div');
+  box.style.cssText = "max-width:380px; text-align:center; background:#181c23; border:1px solid #2a313b; border-radius:16px; padding:32px 28px; font-family:Tahoma,'Segoe UI',Arial,sans-serif;";
+  if (status === 'rejected') {
+    box.innerHTML = '<div style="font-size:34px; margin-bottom:12px;">⛔</div>'
+      + '<div style="font-size:15px; font-weight:700; margin-bottom:8px;">دسترسی رد شده</div>'
+      + '<div style="font-size:12.5px; color:#8b95a1; line-height:2;">درخواست دسترسی شما توسط ادمین رد شده است. برای اطلاعات بیشتر با ادمین تماس بگیر.</div>';
+  } else {
+    box.innerHTML = '<div style="font-size:34px; margin-bottom:12px;">⏳</div>'
+      + '<div style="font-size:15px; font-weight:700; margin-bottom:8px;">در انتظار تأیید ادمین</div>'
+      + '<div style="font-size:12.5px; color:#8b95a1; line-height:2;">حساب شما ثبت شد. به محض تأیید توسط ادمین، به داشبورد دسترسی خواهی داشت.</div>'
+      + '<button id="recheckBtn" style="margin-top:16px; background:#f2b705; color:#12151a; border:none; border-radius:8px; padding:9px 22px; font-weight:700; cursor:pointer; font-family:Tahoma,sans-serif;">بررسی مجدد</button>'
+      + '<div style="margin-top:14px;"><a href="#" id="statusLogout" style="color:#8b95a1; font-size:11.5px;">خروج</a></div>';
+  }
+  overlay.appendChild(box);
+  const recheck = document.getElementById('recheckBtn');
+  if (recheck) recheck.addEventListener('click', function(){ window.location.reload(); });
+  const lo = document.getElementById('statusLogout');
+  if (lo) lo.addEventListener('click', function(e){ e.preventDefault(); firebase.auth().signOut().then(function(){ window.location.href='login.html'; }); });
+}
+
+firebase.auth().onAuthStateChanged(function(user){
+  if (!user) { window.location.href = 'login.html'; return; }
+  document.getElementById('userEmail').textContent = user.email;
+  if (user.email === ADMIN_EMAIL) {
+    const link = document.createElement('a');
+    link.href = 'admin.html'; link.textContent = 'پنل ادمین';
+    link.style.cssText = 'color:#f2b705; font-family:Tahoma,sans-serif; font-size:12px; text-decoration:underline; cursor:pointer;';
+    document.getElementById('userEmail').insertAdjacentElement('afterend', link);
+  }
+
+  // ۱. بررسی تأیید از approved_users.json
+  fetch('approved_users.json')
+    .then(res => res.json())
+    .then(approvedList => {
+      if (!approvedList.includes(user.email)) {
+        showStatusScreen('pending');
+        return;
+      }
+
+      // ۲. بارگذاری داده‌ها از data.json
+      setLoadingText('در حال دریافت داده‌ها...');
+      fetch('data.json')
+        .then(res => {
+          if (!res.ok) throw new Error('فایل data.json پیدا نشد');
+          return res.json();
+        })
+        .then(data => {
+          hideLoading();
+          initDashboard(data);
+        })
+        .catch(err => {
+          setLoadingText('خطا در بارگذاری داده: ' + err.message);
+        });
+    })
+    .catch(err => {
+      console.error('خطا در بررسی تأیید:', err);
+      setLoadingText('خطا در بررسی وضعیت تأیید: ' + err.message);
+    });
+});
+</script>
+</body>
+</html>

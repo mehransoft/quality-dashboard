@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل ادمین | داشبورد کنترل کیفیت</title>
+<style>
+  /* استایل‌های قبلی را می‌توانید از admin.html قدیمی بیاورید */
+  body{background:#12151a; color:#e9ecef; font-family:Tahoma,sans-serif; padding:20px;}
+  .container{max-width:800px; margin:0 auto;}
+  .panel{background:#181c23; border:1px solid #2a313b; border-radius:12px; padding:20px; margin-bottom:20px;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:right; color:#8b95a1; padding:10px 8px; border-bottom:1px solid #2a313b;}
+  td{padding:10px 8px; border-bottom:1px solid rgba(255,255,255,.04);}
+  .badge{padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700;}
+  .badge.pending{background:rgba(242,183,5,.15); color:#f2b705;}
+  .badge.approved{background:rgba(95,191,111,.15); color:#5fbf6f;}
+  button{border:none; border-radius:6px; padding:6px 12px; font-size:11.5px; cursor:pointer; font-weight:700;}
+  .btn-approve{background:#5fbf6f; color:#0d1512;}
+  .btn-revoke{background:#1e232b; border:1px solid #2a313b; color:#8b95a1;}
+  .btn-approve:hover,.btn-revoke:hover{filter:brightness(1.1);}
+  .empty{color:#8b95a1; text-align:center; padding:20px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🛡️ پنل ادمین — مدیریت کاربران</h1>
+  <p style="color:#8b95a1; font-size:12px;">برای تأیید کاربر، ایمیل او را به فایل <code>approved_users.json</code> اضافه کنید و در گیت‌هاب commit بزنید.</p>
+  
+  <div class="panel">
+    <h3>لیست کاربران ثبت‌نام‌شده (از Firebase Authentication)</h3>
+    <div id="userList">در حال بارگذاری...</div>
+  </div>
+
+  <div style="margin-top:20px;">
+    <a href="index.html" style="color:#f2b705;">بازگشت به داشبورد</a>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+firebase.auth().onAuthStateChanged(function(user){
+  if (!user) { window.location.href = 'login.html'; return; }
+  if (user.email !== ADMIN_EMAIL) {
+    document.getElementById('userList').innerHTML = '<div style="color:red;">⛔ این صفحه فقط برای ادمین است.</div>';
+    return;
+  }
+
+  // نمایش لیست کاربران (امکان گرفتن لیست از Firebase Auth وجود ندارد، بنابراین پیام راهنما نمایش داده می‌شود)
+  document.getElementById('userList').innerHTML = `
+    <p style="color:#8b95a1; font-size:13px;">
+      برای دیدن لیست کاربران به Firebase Console > Authentication بروید.
+      <br><br>
+      برای تأیید کاربر، ایمیل او را به فایل <code>approved_users.json</code> در ریشه‌ی پروژه اضافه کنید و commit بزنید.
+    </p>
+    <div style="background:#1e232b; border:1px solid #2a313b; border-radius:8px; padding:12px; font-family:monospace; font-size:12px; direction:ltr; text-align:left; color:#8b95a1;">
+      [ "user1@example.com", "user2@example.com", ... ]
+    </div>
+  `;
+});
+</script>
+</body>
+</html>
